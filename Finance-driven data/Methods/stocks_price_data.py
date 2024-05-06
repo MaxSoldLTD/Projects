@@ -77,6 +77,17 @@ def analyse_stock_price(stock_lst, start_date, end_date, granuality, type = 'IMO
                          left_index=True, right_index=True)
 
     # Рассчитываем корреляционные матрицы, логарифмические доходности, меру риска VAR по каждой бумаге
+    #Считаем среднюю доходность за период
+    returns = dataframe[dataframe.index >= '2023-03-01']
+    returns = returns.sort_index(ascending=True)
+    returns = returns.pct_change()
+    returns = returns.dropna(how='all')
+    returns = returns.dropna(how='all', axis=1)
+    returns = round(returns, 4) * 100
+    returns = returns.sort_index(ascending=False)
+
+    mean_returns = returns.median()
+    mean_returns = round(mean_returns, 2)
 
     # Формируем датасеты с корреляцией по разным периодам
     corr = dataframe[(dataframe.index >= start_date) & (dataframe.index <= end_date)].dropna(axis=1).corr()
@@ -99,7 +110,9 @@ def analyse_stock_price(stock_lst, start_date, end_date, granuality, type = 'IMO
         #Выводим значения уровня корреляции акций от выбранного индекса/валюты/нефти
         deleting_external_values = ['EUR', 'USD', 'IMOEX', 'Brent']
         final = corr[[type]]
-        final = f'Корреляция за Период с {dataframe.dropna(axis=1).index.min()} по {dataframe.dropna(axis=1).index.max()} \n' \
+        final.rename(columns={f'{type}': f'Correl {type}'})
+
+        final = f'Расчёты за период с {dataframe.dropna(axis=1).index.min()} по {dataframe.dropna(axis=1).index.max()} \n' \
                 f'{final[~final.index.isin(deleting_external_values)].round(2)}'
     except:
         final = f'Введённого значения {type} нет в списке. \n' \

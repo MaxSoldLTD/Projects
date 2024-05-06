@@ -79,8 +79,7 @@ def analyse_stock_price(stock_lst, start_date, end_date, granuality, type = 'IMO
     # Рассчитываем корреляционные матрицы, логарифмические доходности, меру риска VAR по каждой бумаге
 
     # Формируем датасеты с корреляцией по разным периодам
-    corr_days_params = {'week': 8, 'month': 32, '6month': 153, 'year': 253}
-    corr = dataframe.iloc[1:corr_days_params[granuality]].dropna(axis=1).corr()
+    corr = dataframe[(dataframe.index >= start_date) & (dataframe.index <= end_date)].dropna(axis=1).corr()
 
     # Ищем наибольшие корреляции с выбранном параметром Type за нужный период
     try:
@@ -98,10 +97,9 @@ def analyse_stock_price(stock_lst, start_date, end_date, granuality, type = 'IMO
         #plt.show()
 
         #Выводим значения уровня корреляции акций от выбранного индекса/валюты/нефти
-        deleting_external_values = ['EUR','USD','IMOEX','Brent']
+        deleting_external_values = ['EUR', 'USD', 'IMOEX', 'Brent']
         final = corr[[type]]
-        final = f'Корреляция за последние {corr_days_params[granuality]-1} торговых дней \n' \
-                f'Период с {dataframe.dropna(axis=1).index.min()} по {dataframe.dropna(axis=1).index.max()} \n' \
+        final = f'Корреляция за Период с {dataframe.dropna(axis=1).index.min()} по {dataframe.dropna(axis=1).index.max()} \n' \
                 f'{final[~final.index.isin(deleting_external_values)].round(2)}'
     except:
         final = f'Введённого значения {type} нет в списке. \n' \

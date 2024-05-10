@@ -5,6 +5,7 @@ import pandas as pd
 import yfinance as yf
 import datetime as dt
 import matplotlib.pyplot as plt
+import numpy as np
 
 def get_stock_prices(stock_lst,start_date,end_date):
 
@@ -54,7 +55,7 @@ def get_stock_prices(stock_lst,start_date,end_date):
 
     return dataframe
 
-def analyse_stock_price(stock_lst, start_date, end_date, granuality, type = 'IMOEX', const = -1):
+def analyse_stock_price(stock_lst, start_date, end_date, type = 'IMOEX', const = -1):
     # Добавляем к списку
     stock_lst.append('IMOEX')
     # Импортируем котировки цен на нефть, стоимость доллара и евро к рублю
@@ -77,6 +78,7 @@ def analyse_stock_price(stock_lst, start_date, end_date, granuality, type = 'IMO
                          left_index=True, right_index=True)
 
     # Рассчитываем корреляционные матрицы, логарифмические доходности, меру риска VAR по каждой бумаге
+
     #Считаем среднюю доходность за период
     returns = dataframe[dataframe.index >= '2023-03-01']
     returns = returns.sort_index(ascending=True)
@@ -88,6 +90,19 @@ def analyse_stock_price(stock_lst, start_date, end_date, granuality, type = 'IMO
 
     mean_returns = returns.median()
     mean_returns = round(mean_returns, 2)
+
+    #Волатильность бумаги за выбранный период
+    min_periods = len(dataframe.index)
+    data_tickers = list(dataframe.columns)
+    empty_dict = dict()
+    for i in data_tickers:
+        vol = dataframe[i].rolling(min_periods).std() * np.sqrt(min_periods)
+        vol = vol.median()
+        empty_dict[i] = vol
+    volatility = pd.DataFrame.from_dict(empty_dict, orient='index')
+    volatility[0] = round(volatility[0], 2)
+    volatility = volatility.rename(columns={0: f'{min_periods} volatility'})
+    print(volatility)
 
     # Формируем датасеты с корреляцией по разным периодам
     corr = dataframe[(dataframe.index >= start_date) & (dataframe.index <= end_date)].dropna(axis=1).corr()

@@ -78,37 +78,36 @@ def analyse_stock_price(stock_lst, start_date, end_date, type = 'IMOEX', const =
                          left_index=True, right_index=True)
 
     # Рассчитываем корреляционные матрицы, логарифмические доходности, меру риска VAR по каждой бумаге
-
-    #Считаем среднюю доходность за период
-    returns = dataframe[dataframe.index >= '2023-03-01']
-    returns = returns.sort_index(ascending=True)
-    returns = returns.pct_change()
-    returns = returns.dropna(how='all')
-    returns = returns.dropna(how='all', axis=1)
-    returns = round(returns, 4) * 100
-    returns = returns.sort_index(ascending=False)
-
-    mean_returns = returns.median()
-    mean_returns = round(mean_returns, 2)
-
-    #Волатильность бумаги за выбранный период
-    min_periods = len(dataframe.index)
-    data_tickers = list(dataframe.columns)
-    empty_dict = dict()
-    for i in data_tickers:
-        vol = dataframe[i].rolling(min_periods).std() * np.sqrt(min_periods)
-        vol = vol.median()
-        empty_dict[i] = vol
-    volatility = pd.DataFrame.from_dict(empty_dict, orient='index')
-    volatility[0] = round(volatility[0], 2)
-    volatility = volatility.rename(columns={0: f'{min_periods} volatility'})
-    print(volatility)
-
-    # Формируем датасеты с корреляцией по разным периодам
-    corr = dataframe[(dataframe.index >= start_date) & (dataframe.index <= end_date)].dropna(axis=1).corr()
-
-    # Ищем наибольшие корреляции с выбранном параметром Type за нужный период
     try:
+        #Считаем среднюю доходность за период
+        returns = dataframe[(dataframe.index >= start_date) & (dataframe.index <= end_date)]
+        returns = returns.sort_index(ascending=True)
+        returns = returns.pct_change()
+        returns = returns.dropna(how='all')
+        returns = returns.dropna(how='all', axis=1)
+        returns = round(returns, 4) * 100
+        returns = returns.sort_index(ascending=False)
+
+        mean_returns = returns.median()
+        mean_returns = round(mean_returns, 2)
+
+        #Волатильность бумаги за выбранный период
+        min_periods = 7
+        data_tickers = list(dataframe.columns)
+        empty_dict = dict()
+        for i in data_tickers:
+            vol = dataframe[i].rolling(min_periods).std() * np.sqrt(min_periods)
+            vol = vol.median()
+            empty_dict[i] = vol
+        volatility = pd.DataFrame.from_dict(empty_dict, orient='index')
+        volatility[0] = round(volatility[0], 2)
+        volatility = volatility.rename(columns={0: f'{min_periods} volatility'})
+
+        # Формируем датасеты с корреляцией по разным периодам
+        corr = dataframe[(dataframe.index >= start_date) & (dataframe.index <= end_date)].dropna(axis=1).corr()
+
+        # Ищем наибольшие корреляции с выбранном параметром Type за нужный период
+
         #Рисуем столбчатую диаграмму для наглядной оценки корреляции
         corr = corr[abs(corr[type]) >= const]
         corr = corr.sort_values(by=type, ascending=True)
@@ -122,8 +121,10 @@ def analyse_stock_price(stock_lst, start_date, end_date, type = 'IMOEX', const =
 
         #plt.show()
 
-        #Выводим значения уровня корреляции акций от выбранного индекса/валюты/нефти
+        #Создаём финальный датафрейм с результатом расчётов всех параметров
+        #Удаляем лишние колонки из датафрейма
         deleting_external_values = ['EUR', 'USD', 'IMOEX', 'Brent']
+
         final = corr[[type]]
         final.rename(columns={f'{type}': f'Correl {type}'})
 

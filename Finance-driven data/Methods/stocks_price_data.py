@@ -131,7 +131,6 @@ def analyse_stock_price(stock_lst, start_date, end_date, type = 'IMOEX', const =
         final = f'Расчёты за период с {dataframe.dropna(axis=1).index.min()} по {dataframe.dropna(axis=1).index.max()} \n' \
                 f'{final[~final.index.isin(deleting_external_values)].round(2)}'
     except:
-        final = f'Введённого значения {type} нет в списке. \n' \
-                f'Вы можете выбрать значение среди {list(corr.index)}'
+        final = 'Что-то пошло не так'
 
     return final
